@@ -33,4 +33,4 @@ port : 5678 #port you want to run on.
 
 Webui can be found at `<your-ip>:port`.
 
-[repository]: https://github.com/jdeath/homeassistant-addons
+[repository]: https://github.com/camiloconcha/homeassistant-addons
