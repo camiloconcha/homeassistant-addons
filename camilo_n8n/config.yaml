@@ -1,7 +1,7 @@
-name: n8n
+name: camilo_n8n
 version: "1.105.3"
 upstream: 1.62.4
-slug: n8n
+slug: camilo_n8n
 description: >-
   n8n is an extendable workflow automation tool...
 arch:
