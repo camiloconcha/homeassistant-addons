@@ -6,7 +6,7 @@ Functionality not tested, but addon does run
 
 _Thanks to everyone having starred my repo! To star it click on the image below, then it will be on top right. Thanks!_
 
-[![Stargazers repo roster for @camiloconcha/homeassistant-addons](https://reporoster.com/stars/camiloconcha/homeassistant-addons)](https://github.com/camiloconcha/homeassistant-addons/stargazers)
+[![Stargazers repo roster for @camiloconcha/homeassistant-addons](https://reporoster.com/stars/jdeath/homeassistant-addons)](https://github.com/jdeath/homeassistant-addons/stargazers)
 
 ## About
 
