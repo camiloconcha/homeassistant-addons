@@ -2,7 +2,7 @@
 
 _Thanks to everyone having starred my repo! To star it click on the image below, then it will be on top right. Thanks!_
 
-[![Stargazers repo roster for @camiloconcha/homeassistant-addons](https://git-lister.onrender.com/api/stars/camiloconcha/homeassistant-addons?limit=30)](https://github.com/camiloconcha/homeassistant-addons/stargazers)
+[![Stargazers repo roster for @jdeath/homeassistant-addons](https://git-lister.onrender.com/api/stars/camiloconcha/homeassistant-addons?limit=30)](https://github.com/camiloconcha/homeassistant-addons/stargazers)
 
 ## About
 
@@ -19,17 +19,6 @@ home to the next level.
 [![Add repository on my Home Assistant][repository-badge]][repository-url]
 
 If you want to do add the repository manually, please follow the procedure highlighted in the [Home Assistant website](https://home-assistant.io/hassio/installing_third_party_addons). Use the following URL to add this repository: https://github.com/camiloconcha/homeassistant-addons
-
-MeTube from https://github.com/alexta69/metube
-Make a directory /share/metube or may not work correctly. Files will download into this directory
-
-Speedtest from https://hub.docker.com/r/e7db/speedtest
-
-Emulator JS from https://github.com/linuxserver/emulatorjs
-Make a directory /share/emulatorjs
-
-WireGuard Easy based on https://github.com/WeeJeWel/wg-easy/
-Make a directory /ssl/wgeasy
 
 [repository-badge]: https://img.shields.io/badge/Add%20repository%20to%20my-Home%20Assistant-41BDF5?logo=home-assistant&style=for-the-badge
 [repository-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fcamiloconcha%2Fhomeassistant-addons
