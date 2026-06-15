@@ -15,6 +15,30 @@ if (value !== undefined && value !== null) {
 NODE
 }
 
+resolve_addon_host() {
+  configured="$1"
+  target_slug="$2"
+
+  if [ "$configured" != "auto" ]; then
+    printf '%s' "$configured"
+    return
+  fi
+
+  own_hostname="${HOSTNAME:-}"
+  if [ -z "$own_hostname" ]; then
+    echo "[ghostfolio] Could not auto-detect add-on hostname. Set ${target_slug}_host manually." >&2
+    exit 1
+  fi
+
+  repo_prefix="${own_hostname%-camilo-ghostfolio}"
+  if [ "$repo_prefix" = "$own_hostname" ] || [ -z "$repo_prefix" ]; then
+    echo "[ghostfolio] Unexpected add-on hostname: ${own_hostname}. Set ${target_slug}_host manually." >&2
+    exit 1
+  fi
+
+  printf '%s-camilo-ghostfolio-%s' "$repo_prefix" "$target_slug"
+}
+
 DATABASE_URL="$(node <<'NODE'
 const fs = require('fs');
 const options = JSON.parse(fs.readFileSync('/data/options.json', 'utf8'));
@@ -32,7 +56,16 @@ for (const key of required) {
   }
 }
 const enc = encodeURIComponent;
-const host = options.postgres_host;
+let host = options.postgres_host;
+if (host === 'auto') {
+  const ownHostname = process.env.HOSTNAME ?? '';
+  const suffix = '-camilo-ghostfolio';
+  if (!ownHostname.endsWith(suffix)) {
+    console.error(`[ghostfolio] Unexpected add-on hostname: ${ownHostname}. Set postgres_host manually.`);
+    process.exit(1);
+  }
+  host = `${ownHostname.slice(0, -suffix.length)}-camilo-ghostfolio-postgres`;
+}
 const port = options.postgres_port;
 const db = enc(options.postgres_db);
 const user = enc(options.postgres_user);
@@ -44,9 +77,9 @@ NODE
 export DATABASE_URL
 
 ROOT_URL="$(get_option root_url)"
-POSTGRES_HOST="$(get_option postgres_host)"
+POSTGRES_HOST="$(resolve_addon_host "$(get_option postgres_host)" postgres)"
 POSTGRES_PORT="$(get_option postgres_port)"
-REDIS_HOST="$(get_option redis_host)"
+REDIS_HOST="$(resolve_addon_host "$(get_option redis_host)" valkey)"
 REDIS_PORT="$(get_option redis_port)"
 REDIS_PASSWORD="$(get_option redis_password)"
 ACCESS_TOKEN_SALT="$(get_option access_token_salt)"

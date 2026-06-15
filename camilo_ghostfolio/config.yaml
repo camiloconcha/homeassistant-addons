@@ -1,5 +1,5 @@
 name: Camilo Ghostfolio
-version: "1.0.0"
+version: "1.0.1"
 upstream: "3.11.0"
 slug: camilo_ghostfolio
 description: Ghostfolio wealth management web app for family portfolio tracking.
@@ -18,12 +18,12 @@ ports_description:
 webui: http://[HOST]:[PORT:3333]
 options:
   root_url: https://patrimonio.kmilo.cl
-  postgres_host: 2effc9b9-camilo-ghostfolio-postgres
+  postgres_host: auto
   postgres_port: 5432
   postgres_db: ghostfolio
   postgres_user: ghostfolio
   postgres_password: ""
-  redis_host: 2effc9b9-camilo-ghostfolio-valkey
+  redis_host: auto
   redis_port: 6379
   redis_password: ""
   access_token_salt: ""
