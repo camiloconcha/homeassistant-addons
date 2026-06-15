@@ -22,7 +22,6 @@ If you want to do add the repository manually, please follow the procedure highl
 
 ## Add-ons
 
-- `camilo_n8n`: n8n workflow automation.
 - `camilo_ghostfolio_postgres`: PostgreSQL backend for Ghostfolio.
 - `camilo_ghostfolio_valkey`: Valkey/Redis-compatible cache for Ghostfolio.
 - `camilo_ghostfolio`: Ghostfolio wealth management web app.
