@@ -1,0 +1,22 @@
+name: Camilo Ghostfolio PostgreSQL
+version: "1.0.0"
+upstream: "15-alpine"
+slug: camilo_ghostfolio_postgres
+description: PostgreSQL backend for the Camilo Ghostfolio add-on.
+url: https://github.com/camiloconcha/homeassistant-addons
+arch:
+  - amd64
+  - aarch64
+startup: system
+boot: auto
+init: true
+stage: experimental
+backup: cold
+options:
+  postgres_db: ghostfolio
+  postgres_user: ghostfolio
+  postgres_password: ""
+schema:
+  postgres_db: str
+  postgres_user: str
+  postgres_password: password

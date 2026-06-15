@@ -1,0 +1,18 @@
+name: Camilo Ghostfolio Valkey
+version: "1.0.0"
+upstream: "8-alpine"
+slug: camilo_ghostfolio_valkey
+description: Valkey Redis-compatible cache for the Camilo Ghostfolio add-on.
+url: https://github.com/camiloconcha/homeassistant-addons
+arch:
+  - amd64
+  - aarch64
+startup: system
+boot: auto
+init: true
+stage: experimental
+backup: cold
+options:
+  redis_password: ""
+schema:
+  redis_password: password
