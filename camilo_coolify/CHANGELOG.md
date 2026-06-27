@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.3
+
+- Write PHP-FPM errors to Coolify storage logs instead of `/proc/self/fd/2` to avoid Home Assistant/Supervisor pipe permission issues.
+
 ## 0.1.2
 
 - Run the upstream Coolify s6 process as root so PHP-FPM can open container stderr correctly.

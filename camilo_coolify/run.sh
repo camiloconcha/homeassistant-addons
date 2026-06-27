@@ -94,6 +94,20 @@ verify_redis_auth() {
   fi
 }
 
+configure_php_fpm_logging() {
+  log_dir=/var/www/html/storage/logs
+  log_file="${log_dir}/php-fpm-error.log"
+  fpm_pool=/usr/local/etc/php-fpm.d/docker-php-serversideup-pool.conf
+
+  mkdir -p "$log_dir"
+  touch "$log_file"
+  chown -R www-data:www-data "$log_dir"
+
+  if [ -f "$fpm_pool" ]; then
+    sed -i "s#error_log = /proc/self/fd/2#error_log = ${log_file}#" "$fpm_pool"
+  fi
+}
+
 ROOT_URL="$(require_option root_url)"
 APP_ID="$(require_option app_id)"
 APP_KEY="$(require_option app_key)"
@@ -195,6 +209,7 @@ fi
 
 chmod 600 "$ENV_FILE"
 chown www-data:www-data "$ENV_FILE"
+configure_php_fpm_logging
 
 wait_for_tcp PostgreSQL "$DB_HOST" "$DB_PORT"
 wait_for_tcp Redis "$REDIS_HOST" "$REDIS_PORT"

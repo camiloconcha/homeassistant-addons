@@ -1,5 +1,5 @@
 name: Camilo Coolify
-version: "0.1.2"
+version: "0.1.3"
 upstream: "4.1.2"
 slug: camilo_coolify
 description: Coolify dashboard packaged for Home Assistant. Use it to manage remote Docker servers over SSH.
