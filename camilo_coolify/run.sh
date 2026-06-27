@@ -176,4 +176,4 @@ wait_for_tcp Redis "$REDIS_HOST" "$REDIS_PORT"
 wait_for_tcp "Coolify realtime" "$REALTIME_HOST" "$REALTIME_BACKEND_PORT"
 
 echo "[coolify] Starting Coolify. Local Home Assistant Docker management is disabled; add remote servers in Coolify over SSH."
-exec su-exec www-data /init
+exec su-exec www-data docker-php-serversideup-entrypoint /init
