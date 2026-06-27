@@ -138,6 +138,24 @@ EOF
   sshd -t
 }
 
+require_nested_docker_privileges() {
+  check_dir=/tmp/docker-host-privilege-check
+  mkdir -p "$check_dir"
+
+  if mount -t tmpfs tmpfs "$check_dir" >/dev/null 2>&1; then
+    umount "$check_dir" >/dev/null 2>&1 || true
+    rmdir "$check_dir" >/dev/null 2>&1 || true
+    return
+  fi
+
+  rmdir "$check_dir" >/dev/null 2>&1 || true
+  echo "[docker-host] Docker-in-Docker is missing required Linux privileges."
+  echo "[docker-host] In Home Assistant, open this add-on and turn OFF Protection mode, then restart it."
+  echo "[docker-host] This add-on also requires full_access, AppArmor disabled, SYS_ADMIN, NET_ADMIN, and kernel module access."
+  echo "[docker-host] Without those permissions Docker cannot mount filesystems or configure networking."
+  exit 1
+}
+
 print_connection_details() {
   echo "[docker-host] Internal SSH host: ${HOSTNAME:-camilo-coolify-docker-host}"
   echo "[docker-host] SSH users: root$(option_true allow_root_login || printf ' disabled'), coolify"
@@ -215,6 +233,7 @@ prepare_host_keys
 prepare_authorized_keys
 configure_password_auth
 write_sshd_config
+require_nested_docker_privileges
 print_connection_details
 start_dockerd
 start_sshd

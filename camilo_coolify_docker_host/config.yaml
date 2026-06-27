@@ -1,5 +1,5 @@
 name: Camilo Coolify Docker Host
-version: "0.1.0"
+version: "0.1.1"
 upstream: "docker:29-dind"
 slug: camilo_coolify_docker_host
 description: Self-contained Docker host for the Camilo Coolify add-on. Experimental Docker-in-Docker backend.
@@ -14,6 +14,15 @@ stage: experimental
 backup: cold
 full_access: true
 apparmor: false
+kernel_modules: true
+privileged:
+  - DAC_READ_SEARCH
+  - NET_ADMIN
+  - NET_RAW
+  - SYS_ADMIN
+  - SYS_MODULE
+  - SYS_PTRACE
+  - SYS_RESOURCE
 ports:
   22/tcp: null
   80/tcp: null

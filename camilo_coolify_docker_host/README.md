@@ -8,7 +8,9 @@ This add-on runs a nested Docker daemon and an SSH server inside its own Home As
 
 This is Docker-in-Docker. It is more fragile and heavier than a normal remote Docker server. Use a VPS, VM, NUC, NAS, or Raspberry Pi with native Docker when possible.
 
-This add-on requires `full_access` and disables AppArmor because nested Docker needs privileged kernel features. It does not expose the Home Assistant OS Docker socket to Coolify.
+This add-on requires `full_access`, extra Linux capabilities, host kernel module metadata, and disabled AppArmor because nested Docker needs privileged kernel features. It does not expose the Home Assistant OS Docker socket to Coolify.
+
+After installing it in Home Assistant, turn **Protection mode** off for this add-on. If Protection mode is still on, Docker will fail with mount or iptables errors.
 
 The default Docker storage driver is `vfs`. It is slower than `overlay2`, but it is the most compatible choice for nested Docker. You can try `overlay2` later if your Home Assistant host supports it cleanly.
 
