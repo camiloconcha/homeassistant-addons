@@ -1,0 +1,33 @@
+name: Camilo Coolify Realtime
+version: "0.1.0"
+upstream: "1.0.16"
+slug: camilo_coolify_realtime
+description: Coolify realtime and terminal websocket backend.
+url: https://github.com/camiloconcha/homeassistant-addons
+arch:
+  - amd64
+  - aarch64
+startup: system
+boot: auto
+init: true
+stage: experimental
+ports:
+  6001/tcp: 6001
+  6002/tcp: 6002
+ports_description:
+  6001/tcp: Coolify realtime websocket.
+  6002/tcp: Coolify terminal websocket.
+options:
+  app_name: Coolify
+  coolify_host: auto
+  pusher_app_id: ""
+  pusher_app_key: ""
+  pusher_app_secret: ""
+  soketi_debug: false
+schema:
+  app_name: str
+  coolify_host: str
+  pusher_app_id: password
+  pusher_app_key: password
+  pusher_app_secret: password
+  soketi_debug: bool

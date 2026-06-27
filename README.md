@@ -22,9 +22,18 @@ If you want to do add the repository manually, please follow the procedure highl
 
 ## Add-ons
 
+- `camilo_coolify_postgres`: PostgreSQL backend for Coolify.
+- `camilo_coolify_redis`: Redis backend for Coolify.
+- `camilo_coolify_realtime`: Coolify realtime and terminal websocket backend.
+- `camilo_coolify`: Coolify dashboard for managing remote Docker servers over SSH.
 - `camilo_ghostfolio_postgres`: PostgreSQL backend for Ghostfolio.
 - `camilo_ghostfolio_valkey`: Valkey/Redis-compatible cache for Ghostfolio.
 - `camilo_ghostfolio`: Ghostfolio wealth management web app.
+
+For Coolify, install and start PostgreSQL, Redis, and Realtime first, then
+configure and start Coolify. This package intentionally disables Coolify's
+automatic localhost Docker bootstrap so Home Assistant OS does not become an
+unsupported Docker host. Add remote Docker servers from the Coolify UI instead.
 
 For Ghostfolio, install and start PostgreSQL and Valkey first, then configure and
 start Ghostfolio. Keep credentials in the Home Assistant add-on options; do not

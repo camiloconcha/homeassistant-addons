@@ -1,0 +1,71 @@
+name: Camilo Coolify
+version: "0.1.0"
+upstream: "4.1.2"
+slug: camilo_coolify
+description: Coolify dashboard packaged for Home Assistant. Use it to manage remote Docker servers over SSH.
+url: https://github.com/camiloconcha/homeassistant-addons
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: true
+stage: experimental
+backup: cold
+ports:
+  8080/tcp: 8000
+ports_description:
+  8080/tcp: Coolify web UI. Leave enabled for local access or disable when a reverse proxy handles it.
+webui: http://[HOST]:[PORT:8080]
+options:
+  root_url: http://homeassistant.local:8000
+  app_id: ""
+  app_key: ""
+  db_host: auto
+  db_port: 5432
+  db_database: coolify
+  db_username: coolify
+  db_password: ""
+  redis_host: auto
+  redis_port: 6379
+  redis_password: ""
+  realtime_host: auto
+  realtime_backend_port: 6001
+  pusher_app_id: ""
+  pusher_app_key: ""
+  pusher_app_secret: ""
+  pusher_host: ""
+  pusher_port: ""
+  terminal_protocol: ""
+  terminal_host: ""
+  terminal_port: ""
+  root_username: ""
+  root_user_email: ""
+  root_user_password: ""
+  autoupdate: false
+schema:
+  root_url: url
+  app_id: str
+  app_key: password
+  db_host: str
+  db_port: port
+  db_database: str
+  db_username: str
+  db_password: password
+  redis_host: str
+  redis_port: port
+  redis_password: password
+  realtime_host: str
+  realtime_backend_port: port
+  pusher_app_id: password
+  pusher_app_key: password
+  pusher_app_secret: password
+  pusher_host: str
+  pusher_port: str
+  terminal_protocol: str
+  terminal_host: str
+  terminal_port: str
+  root_username: str
+  root_user_email: str
+  root_user_password: password
+  autoupdate: bool
