@@ -1,0 +1,42 @@
+name: Camilo Coolify Docker Host
+version: "0.1.0"
+upstream: "docker:29-dind"
+slug: camilo_coolify_docker_host
+description: Self-contained Docker host for the Camilo Coolify add-on. Experimental Docker-in-Docker backend.
+url: https://github.com/camiloconcha/homeassistant-addons
+arch:
+  - amd64
+  - aarch64
+startup: system
+boot: auto
+init: false
+stage: experimental
+backup: cold
+full_access: true
+apparmor: false
+ports:
+  22/tcp: null
+  80/tcp: null
+  443/tcp: null
+ports_description:
+  22/tcp: Optional SSH access to the encapsulated Docker host. Not required for Coolify internal access.
+  80/tcp: Optional HTTP proxy/app port for workloads deployed by Coolify.
+  443/tcp: Optional HTTPS proxy/app port for workloads deployed by Coolify.
+options:
+  ssh_authorized_keys: ""
+  generate_client_key: true
+  print_client_private_key: false
+  ssh_password: ""
+  allow_root_login: true
+  docker_storage_driver: vfs
+  docker_log_level: info
+  docker_mtu: 1500
+schema:
+  ssh_authorized_keys: str
+  generate_client_key: bool
+  print_client_private_key: bool
+  ssh_password: password
+  allow_root_login: bool
+  docker_storage_driver: list(vfs|overlay2)
+  docker_log_level: list(debug|info|warn|error|fatal)
+  docker_mtu: int
