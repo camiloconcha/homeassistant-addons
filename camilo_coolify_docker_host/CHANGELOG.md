@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Start `dockerd` directly through `docker-init`, skipping the upstream `dind` wrapper that writes to `/sys/fs/cgroup/init` and fails on Home Assistant OS read-only cgroups.
+
 ## 0.1.1
 
 - Request explicit Docker-in-Docker capabilities and kernel module metadata.

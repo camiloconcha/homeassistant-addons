@@ -183,8 +183,8 @@ start_dockerd() {
   docker_storage_driver="$(get_option docker_storage_driver)"
   docker_mtu="$(get_option docker_mtu)"
 
-  echo "[docker-host] Starting nested Docker daemon"
-  dockerd-entrypoint.sh dockerd \
+  echo "[docker-host] Starting nested Docker daemon without the dind cgroup wrapper"
+  docker-init -- dockerd \
     --host=unix:///var/run/docker.sock \
     --data-root="$DOCKER_DATA" \
     --storage-driver="$docker_storage_driver" \
