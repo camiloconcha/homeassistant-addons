@@ -69,6 +69,31 @@ wait_for_tcp() {
   exit 1
 }
 
+verify_redis_auth() {
+  host="$1"
+  port="$2"
+  password="$3"
+
+  echo "[coolify] Verifying Redis authentication at ${host}:${port}"
+  if ! php -r '
+    try {
+      $redis = new Redis();
+      $redis->connect($argv[1], (int) $argv[2], 3);
+      if ($argv[3] !== "") {
+        $redis->auth($argv[3]);
+      }
+      $redis->ping();
+      exit(0);
+    } catch (Throwable $e) {
+      fwrite(STDERR, $e->getMessage() . PHP_EOL);
+      exit(1);
+    }
+  ' "$host" "$port" "$password"; then
+    echo "[coolify] Redis authentication failed. Make redis_password identical in Camilo Coolify and Camilo Coolify Redis."
+    exit 1
+  fi
+}
+
 ROOT_URL="$(require_option root_url)"
 APP_ID="$(require_option app_id)"
 APP_KEY="$(require_option app_key)"
@@ -173,7 +198,8 @@ chown www-data:www-data "$ENV_FILE"
 
 wait_for_tcp PostgreSQL "$DB_HOST" "$DB_PORT"
 wait_for_tcp Redis "$REDIS_HOST" "$REDIS_PORT"
+verify_redis_auth "$REDIS_HOST" "$REDIS_PORT" "$REDIS_PASSWORD"
 wait_for_tcp "Coolify realtime" "$REALTIME_HOST" "$REALTIME_BACKEND_PORT"
 
 echo "[coolify] Starting Coolify. Local Home Assistant Docker management is disabled; add remote servers in Coolify over SSH."
-exec su-exec www-data docker-php-serversideup-entrypoint /init
+exec docker-php-serversideup-entrypoint /init
