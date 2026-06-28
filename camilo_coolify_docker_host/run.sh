@@ -156,6 +156,65 @@ require_nested_docker_privileges() {
   exit 1
 }
 
+can_write_cgroup_root() {
+  test_dir=/sys/fs/cgroup/coolify-write-test
+  if mkdir -p "$test_dir" >/dev/null 2>&1; then
+    rmdir "$test_dir" >/dev/null 2>&1 || true
+    return 0
+  fi
+  return 1
+}
+
+enable_cgroup_v2_nesting() {
+  [ -f /sys/fs/cgroup/cgroup.controllers ] || return 0
+
+  mkdir -p /sys/fs/cgroup/init
+  attempts=0
+  while [ "$attempts" -lt 20 ]; do
+    if {
+      xargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs 2>/dev/null || :
+      sed -e 's/ / +/g' -e 's/^/+/' < /sys/fs/cgroup/cgroup.controllers > /sys/fs/cgroup/cgroup.subtree_control
+    } >/dev/null 2>&1; then
+      echo "[docker-host] cgroup v2 nesting enabled"
+      return 0
+    fi
+    attempts=$((attempts + 1))
+    sleep 1
+  done
+
+  echo "[docker-host] Unable to enable cgroup v2 nesting"
+  return 1
+}
+
+prepare_nested_cgroups() {
+  if can_write_cgroup_root; then
+    enable_cgroup_v2_nesting
+    return
+  fi
+
+  echo "[docker-host] /sys/fs/cgroup is not writable; trying to remount it read-write"
+  mount -o remount,rw /sys/fs/cgroup >/dev/null 2>&1 || true
+
+  if can_write_cgroup_root; then
+    enable_cgroup_v2_nesting
+    return
+  fi
+
+  echo "[docker-host] Remount did not work; trying a private cgroup2 mount for Docker-in-Docker"
+  mount -t cgroup2 cgroup2 /sys/fs/cgroup >/dev/null 2>&1 || true
+
+  if can_write_cgroup_root; then
+    enable_cgroup_v2_nesting
+    return
+  fi
+
+  echo "[docker-host] Docker-in-Docker cannot create nested cgroups."
+  echo "[docker-host] In Home Assistant, turn OFF Protection mode for this add-on and restart it."
+  echo "[docker-host] If Protection mode is already off, Home Assistant OS is still exposing /sys/fs/cgroup read-only to this add-on."
+  echo "[docker-host] Coolify deployments will fail with: mkdir /sys/fs/cgroup/docker: read-only file system."
+  exit 1
+}
+
 print_connection_details() {
   echo "[docker-host] Internal SSH host: ${HOSTNAME:-camilo-coolify-docker-host}"
   echo "[docker-host] SSH users: root$(option_true allow_root_login || printf ' disabled'), coolify"
@@ -183,7 +242,9 @@ start_dockerd() {
   docker_storage_driver="$(get_option docker_storage_driver)"
   docker_mtu="$(get_option docker_mtu)"
 
-  echo "[docker-host] Starting nested Docker daemon without the dind cgroup wrapper"
+  prepare_nested_cgroups
+
+  echo "[docker-host] Starting nested Docker daemon"
   docker-init -- dockerd \
     --host=unix:///var/run/docker.sock \
     --data-root="$DOCKER_DATA" \

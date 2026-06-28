@@ -12,6 +12,14 @@ This add-on requires `full_access`, extra Linux capabilities, host kernel module
 
 After installing it in Home Assistant, turn **Protection mode** off for this add-on. If Protection mode is still on, Docker will fail with mount or iptables errors.
 
+If Coolify deployments fail with:
+
+```text
+mkdir /sys/fs/cgroup/docker: read-only file system
+```
+
+update this add-on to `0.1.3`, keep **Protection mode** off, restart the add-on, then validate the server again in Coolify and redeploy. Version `0.1.3` prepares writable nested cgroups before `dockerd` starts and fails early with a clearer log message if Home Assistant OS still blocks the cgroup mount.
+
 The default Docker storage driver is `vfs`. It is slower than `overlay2`, but it is the most compatible choice for nested Docker. You can try `overlay2` later if your Home Assistant host supports it cleanly.
 
 ## Start order
