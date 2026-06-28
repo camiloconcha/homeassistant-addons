@@ -6,6 +6,8 @@ APP_DIR=/var/www/html
 ENV_FILE="${APP_DIR}/.env"
 COOLIFY_USER=www-data
 COOLIFY_GROUP=www-data
+NGINX_ERROR_LOG="${APP_DIR}/storage/logs/nginx-error.log"
+NGINX_ACCESS_LOG="${APP_DIR}/storage/logs/nginx-access.log"
 
 get_option() {
   jq -r --arg key "$1" '.[$key] // ""' "$CONFIG"
@@ -109,6 +111,15 @@ configure_php_fpm_logging() {
   if [ -f "$fpm_pool" ]; then
     sed -i "s#error_log = /proc/self/fd/2#error_log = ${log_file}#" "$fpm_pool"
   fi
+}
+
+configure_nginx_logging() {
+  mkdir -p "${APP_DIR}/storage/logs"
+  touch "$NGINX_ERROR_LOG" "$NGINX_ACCESS_LOG"
+  chown "${COOLIFY_USER}:${COOLIFY_GROUP}" "$NGINX_ERROR_LOG" "$NGINX_ACCESS_LOG"
+
+  export NGINX_ERROR_LOG
+  export NGINX_ACCESS_LOG
 }
 
 prepare_runtime_permissions() {
@@ -236,6 +247,7 @@ fi
 chmod 600 "$ENV_FILE"
 chown "${COOLIFY_USER}:${COOLIFY_GROUP}" "$ENV_FILE"
 configure_php_fpm_logging
+configure_nginx_logging
 prepare_runtime_permissions
 
 wait_for_tcp PostgreSQL "$DB_HOST" "$DB_PORT"

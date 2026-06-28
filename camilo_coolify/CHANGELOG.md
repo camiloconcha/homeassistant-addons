@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.7
+
+- Route NGINX access and error logs to writable Coolify storage files when running the upstream stack as `www-data`.
+
 ## 0.1.6
 
 - Normalize Coolify runtime permissions for Laravel logs, temporary compose files, and cache directories before startup.
