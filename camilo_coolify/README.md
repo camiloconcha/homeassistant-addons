@@ -33,3 +33,5 @@ For Cloudflare Tunnel or another reverse proxy, route:
 - `/terminal/ws` to `camilo_coolify_realtime` port `6002`
 
 If your proxy cannot route by path, use separate hostnames and set `pusher_host`, `terminal_host`, `terminal_protocol`, and `terminal_port` in the Coolify add-on options.
+
+When using separate subdomains for realtime or terminal websockets, set `session_domain` to the parent domain with a leading dot, for example `.kmilo.cl`. The terminal backend authenticates websocket upgrades with the browser's Coolify session cookies, so the cookies must be valid across `coolify.kmilo.cl` and `coolify-terminal.kmilo.cl`.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4
+
+- Add `session_domain` so Coolify can share auth cookies with separate realtime and terminal subdomains behind Cloudflare Tunnel.
+
 ## 0.1.3
 
 - Write PHP-FPM errors to Coolify storage logs instead of `/proc/self/fd/2` to avoid Home Assistant/Supervisor pipe permission issues.

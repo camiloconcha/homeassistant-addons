@@ -1,5 +1,5 @@
 name: Camilo Coolify
-version: "0.1.3"
+version: "0.1.4"
 upstream: "4.1.2"
 slug: camilo_coolify
 description: Coolify dashboard packaged for Home Assistant. Use it to manage remote Docker servers over SSH.
@@ -36,6 +36,7 @@ options:
   pusher_app_secret: ""
   pusher_host: ""
   pusher_port: ""
+  session_domain: ""
   terminal_protocol: ""
   terminal_host: ""
   terminal_port: ""
@@ -62,6 +63,7 @@ schema:
   pusher_app_secret: password
   pusher_host: str
   pusher_port: str
+  session_domain: str
   terminal_protocol: str
   terminal_host: str
   terminal_port: str
