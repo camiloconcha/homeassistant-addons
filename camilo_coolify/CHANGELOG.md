@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.6
+
+- Normalize Coolify runtime permissions for Laravel logs, temporary compose files, and cache directories before startup.
+- Start the upstream Coolify s6 stack as `www-data` after root-only Home Assistant add-on setup to avoid mixed root/www-data storage ownership during deployments.
+
 ## 0.1.5
 
 - Allow the Coolify settings page to load when the upstream localhost server record is intentionally disabled on Home Assistant OS.

@@ -2,7 +2,10 @@
 set -eu
 
 CONFIG=/data/options.json
-ENV_FILE=/var/www/html/.env
+APP_DIR=/var/www/html
+ENV_FILE="${APP_DIR}/.env"
+COOLIFY_USER=www-data
+COOLIFY_GROUP=www-data
 
 get_option() {
   jq -r --arg key "$1" '.[$key] // ""' "$CONFIG"
@@ -95,17 +98,38 @@ verify_redis_auth() {
 }
 
 configure_php_fpm_logging() {
-  log_dir=/var/www/html/storage/logs
+  log_dir="${APP_DIR}/storage/logs"
   log_file="${log_dir}/php-fpm-error.log"
   fpm_pool=/usr/local/etc/php-fpm.d/docker-php-serversideup-pool.conf
 
   mkdir -p "$log_dir"
   touch "$log_file"
-  chown -R www-data:www-data "$log_dir"
+  chown -R "${COOLIFY_USER}:${COOLIFY_GROUP}" "$log_dir"
 
   if [ -f "$fpm_pool" ]; then
     sed -i "s#error_log = /proc/self/fd/2#error_log = ${log_file}#" "$fpm_pool"
   fi
+}
+
+prepare_runtime_permissions() {
+  mkdir -p \
+    "${APP_DIR}/storage/app/tmp" \
+    "${APP_DIR}/storage/framework/cache" \
+    "${APP_DIR}/storage/framework/sessions" \
+    "${APP_DIR}/storage/framework/views" \
+    "${APP_DIR}/storage/logs" \
+    "${APP_DIR}/bootstrap/cache"
+
+  touch "${APP_DIR}/storage/logs/laravel.log"
+
+  chown -R "${COOLIFY_USER}:${COOLIFY_GROUP}" \
+    /data/coolify \
+    "${APP_DIR}/storage" \
+    "${APP_DIR}/bootstrap/cache"
+  chmod -R u+rwX,g+rwX \
+    /data/coolify \
+    "${APP_DIR}/storage" \
+    "${APP_DIR}/bootstrap/cache"
 }
 
 ROOT_URL="$(require_option root_url)"
@@ -158,7 +182,7 @@ for storage_dir in ssh applications databases services backups; do
   fi
 done
 
-chown -R www-data:www-data /data/coolify
+chown -R "${COOLIFY_USER}:${COOLIFY_GROUP}" /data/coolify
 
 : > "$ENV_FILE"
 write_env APP_ENV production
@@ -210,8 +234,9 @@ if [ -n "$ROOT_USER_EMAIL" ]; then
 fi
 
 chmod 600 "$ENV_FILE"
-chown www-data:www-data "$ENV_FILE"
+chown "${COOLIFY_USER}:${COOLIFY_GROUP}" "$ENV_FILE"
 configure_php_fpm_logging
+prepare_runtime_permissions
 
 wait_for_tcp PostgreSQL "$DB_HOST" "$DB_PORT"
 wait_for_tcp Redis "$REDIS_HOST" "$REDIS_PORT"
@@ -219,4 +244,4 @@ verify_redis_auth "$REDIS_HOST" "$REDIS_PORT" "$REDIS_PASSWORD"
 wait_for_tcp "Coolify realtime" "$REALTIME_HOST" "$REALTIME_BACKEND_PORT"
 
 echo "[coolify] Starting Coolify. Local Home Assistant Docker management is disabled; add remote servers in Coolify over SSH."
-exec docker-php-serversideup-entrypoint /init
+exec su-exec "${COOLIFY_USER}:${COOLIFY_GROUP}" docker-php-serversideup-entrypoint /init
