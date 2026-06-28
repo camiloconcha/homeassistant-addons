@@ -22,6 +22,8 @@ Use `base64:<openssl rand -base64 32>` for `app_key`.
 
 This add-on intentionally disables Coolify's automatic `localhost` server bootstrap. Home Assistant OS should not be used as a Docker host controlled by Coolify because that can make Supervisor report the installation as unsupported. Add your VPS or another Docker server inside Coolify over SSH instead.
 
+Because the upstream localhost server record is disabled, this add-on also patches the Coolify settings page so it loads without requiring server `id=0`.
+
 If you want a self-contained setup without an external VPS, install `camilo_coolify_docker_host` and add it in Coolify as a remote SSH server. Do not select `This machine`; use the internal Docker Host add-on hostname printed in its logs.
 
 For local access, keep port `8000` enabled and open `http://homeassistant.local:8000`. Realtime uses ports `6001` and `6002`.

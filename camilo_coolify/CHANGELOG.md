@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Allow the Coolify settings page to load when the upstream localhost server record is intentionally disabled on Home Assistant OS.
+
 ## 0.1.4
 
 - Add `session_domain` so Coolify can share auth cookies with separate realtime and terminal subdomains behind Cloudflare Tunnel.

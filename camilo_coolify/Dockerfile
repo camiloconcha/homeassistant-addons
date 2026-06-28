@@ -12,7 +12,8 @@ LABEL \
 USER root
 RUN apk add --no-cache jq su-exec \
   && sed -i "s/if (! isCloud() && config('constants.coolify.is_windows_docker_desktop') == false) {/if (! isCloud() \&\& env('COOLIFY_HA_ENABLE_LOCALHOST', false) \&\& config('constants.coolify.is_windows_docker_desktop') == false) {/" /var/www/html/database/seeders/ProductionSeeder.php \
-  && sed -i "s/if (! isCloud()) {/if (! isCloud() \&\& env('COOLIFY_HA_ENABLE_LOCALHOST', false)) {/" /var/www/html/database/seeders/ProductionSeeder.php
+  && sed -i "s/if (! isCloud()) {/if (! isCloud() \&\& env('COOLIFY_HA_ENABLE_LOCALHOST', false)) {/" /var/www/html/database/seeders/ProductionSeeder.php \
+  && sed -i "s/Server::findOrFail(0)/Server::find(0)/" /var/www/html/app/Livewire/Settings/Index.php
 
 COPY run.sh /usr/local/bin/run-addon.sh
 RUN chmod +x /usr/local/bin/run-addon.sh
