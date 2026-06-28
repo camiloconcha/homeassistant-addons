@@ -18,7 +18,13 @@ If Coolify deployments fail with:
 mkdir /sys/fs/cgroup/docker: read-only file system
 ```
 
-update this add-on to `0.1.3`, keep **Protection mode** off, restart the add-on, then validate the server again in Coolify and redeploy. Version `0.1.3` prepares writable nested cgroups before `dockerd` starts and fails early with a clearer log message if Home Assistant OS still blocks the cgroup mount.
+update this add-on to `0.1.4`, keep **Protection mode** off, restart the add-on, then validate the server again in Coolify and redeploy. Version `0.1.4` tries to prepare writable nested cgroups, but restores best-effort startup by default if Home Assistant OS still blocks the cgroup mount.
+
+If you prefer the add-on to fail early instead of starting a possibly limited Docker daemon, set:
+
+```yaml
+require_writable_cgroups: true
+```
 
 The default Docker storage driver is `vfs`. It is slower than `overlay2`, but it is the most compatible choice for nested Docker. You can try `overlay2` later if your Home Assistant host supports it cleanly.
 

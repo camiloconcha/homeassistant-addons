@@ -212,7 +212,13 @@ prepare_nested_cgroups() {
   echo "[docker-host] In Home Assistant, turn OFF Protection mode for this add-on and restart it."
   echo "[docker-host] If Protection mode is already off, Home Assistant OS is still exposing /sys/fs/cgroup read-only to this add-on."
   echo "[docker-host] Coolify deployments will fail with: mkdir /sys/fs/cgroup/docker: read-only file system."
-  exit 1
+
+  if option_true require_writable_cgroups; then
+    exit 1
+  fi
+
+  echo "[docker-host] Continuing anyway because require_writable_cgroups=false."
+  echo "[docker-host] This restores the previous best-effort behavior, but deployments may still fail if Docker cannot create container cgroups."
 }
 
 print_connection_details() {
@@ -240,6 +246,7 @@ start_dockerd() {
 
   docker_log_level="$(get_option docker_log_level)"
   docker_storage_driver="$(get_option docker_storage_driver)"
+  docker_cgroupns_mode="$(get_option docker_cgroupns_mode)"
   docker_mtu="$(get_option docker_mtu)"
 
   prepare_nested_cgroups
@@ -249,6 +256,7 @@ start_dockerd() {
     --host=unix:///var/run/docker.sock \
     --data-root="$DOCKER_DATA" \
     --storage-driver="$docker_storage_driver" \
+    --default-cgroupns-mode="$docker_cgroupns_mode" \
     --log-level="$docker_log_level" \
     --mtu="$docker_mtu" &
   DOCKERD_PID=$!

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.4
+
+- Restore best-effort startup when Home Assistant exposes `/sys/fs/cgroup` as read-only by making the writable-cgroup preflight configurable.
+- Default nested Docker containers to host cgroup namespace mode to improve compatibility in constrained Home Assistant OS add-on environments.
+
 ## 0.1.3
 
 - Prepare writable cgroup v2 nesting before starting `dockerd`, so Coolify helper/app containers can create their own cgroups.
