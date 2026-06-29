@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- Add `docker_mode` with `rootless` as the default, using `docker:29-dind-rootless`.
+- Run rootless Docker with `cgroup=none` to avoid Home Assistant OS read-only `/sys/fs/cgroup` deployment failures.
+- Keep the root SSH workflow compatible for Coolify by exposing the rootless Docker socket at `/var/run/docker.sock`.
+
 ## 0.1.4
 
 - Restore best-effort startup when Home Assistant exposes `/sys/fs/cgroup` as read-only by making the writable-cgroup preflight configurable.

@@ -1,6 +1,6 @@
 name: Camilo Coolify Docker Host
-version: "0.1.4"
-upstream: "docker:29-dind"
+version: "0.1.5"
+upstream: "docker:29-dind-rootless"
 slug: camilo_coolify_docker_host
 description: Self-contained Docker host for the Camilo Coolify add-on. Experimental Docker-in-Docker backend.
 url: https://github.com/camiloconcha/homeassistant-addons
@@ -37,7 +37,8 @@ options:
   print_client_private_key: false
   ssh_password: ""
   allow_root_login: true
-  docker_storage_driver: vfs
+  docker_mode: rootless
+  docker_storage_driver: auto
   docker_cgroupns_mode: host
   require_writable_cgroups: false
   docker_log_level: info
@@ -48,7 +49,8 @@ schema:
   print_client_private_key: bool
   ssh_password: password
   allow_root_login: bool
-  docker_storage_driver: list(vfs|overlay2)
+  docker_mode: list(rootless|rootful)
+  docker_storage_driver: list(auto|vfs|overlay2)
   docker_cgroupns_mode: list(host|private)
   require_writable_cgroups: bool
   docker_log_level: list(debug|info|warn|error|fatal)

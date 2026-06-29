@@ -1,4 +1,6 @@
-FROM docker:29-dind
+FROM docker:29-dind-rootless
+
+USER root
 
 ARG BUILD_VERSION
 ARG BUILD_ARCH
@@ -19,6 +21,7 @@ RUN apk add --no-cache \
     jq \
     openssh-server \
     shadow \
+    su-exec \
     sudo \
   && mkdir -p /run/sshd /data
 

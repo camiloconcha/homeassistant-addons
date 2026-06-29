@@ -8,7 +8,9 @@ This add-on runs a nested Docker daemon and an SSH server inside its own Home As
 
 This is Docker-in-Docker. It is more fragile and heavier than a normal remote Docker server. Use a VPS, VM, NUC, NAS, or Raspberry Pi with native Docker when possible.
 
-This add-on requires `full_access`, extra Linux capabilities, host kernel module metadata, and disabled AppArmor because nested Docker needs privileged kernel features. It does not expose the Home Assistant OS Docker socket to Coolify.
+This add-on defaults to rootless nested Docker. It does not expose the Home Assistant OS Docker socket to Coolify.
+
+Rootless mode avoids depending on writable host cgroups, which Home Assistant OS can expose as read-only to add-ons. Rootful mode remains available through `docker_mode: rootful`, but it requires `full_access`, extra Linux capabilities, host kernel module metadata, disabled AppArmor, and writable nested cgroups.
 
 After installing it in Home Assistant, turn **Protection mode** off for this add-on. If Protection mode is still on, Docker will fail with mount or iptables errors.
 
@@ -20,13 +22,22 @@ mkdir /sys/fs/cgroup/docker: read-only file system
 
 update this add-on to `0.1.4`, keep **Protection mode** off, restart the add-on, then validate the server again in Coolify and redeploy. Version `0.1.4` tries to prepare writable nested cgroups, but restores best-effort startup by default if Home Assistant OS still blocks the cgroup mount.
 
+If the same error persists, update to `0.1.5` and use the default:
+
+```yaml
+docker_mode: rootless
+docker_storage_driver: auto
+```
+
+Rootless Docker should report `cgroup=none` in the add-on logs and can deploy containers without creating `/sys/fs/cgroup/docker`.
+
 If you prefer the add-on to fail early instead of starting a possibly limited Docker daemon, set:
 
 ```yaml
 require_writable_cgroups: true
 ```
 
-The default Docker storage driver is `vfs`. It is slower than `overlay2`, but it is the most compatible choice for nested Docker. You can try `overlay2` later if your Home Assistant host supports it cleanly.
+The default Docker storage driver is `auto`. In rootless mode this lets Docker choose its rootless-compatible default. In rootful mode `auto` maps to `vfs`, which is slower than `overlay2` but more compatible for nested Docker.
 
 ## Start order
 

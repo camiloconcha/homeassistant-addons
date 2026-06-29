@@ -3,6 +3,10 @@ set -eu
 
 CONFIG=/data/options.json
 DOCKER_DATA=/data/docker
+ROOTLESS_DOCKER_DATA=/data/docker-rootless
+ROOTLESS_USER=rootless
+ROOTLESS_HOME=/home/rootless
+ROOTLESS_RUNTIME=/tmp/docker-rootless-runtime
 SSH_DATA=/data/ssh
 CLIENT_KEY="${SSH_DATA}/coolify_client_ed25519"
 AUTHORIZED_TMP=/tmp/coolify_authorized_keys
@@ -13,6 +17,14 @@ get_option() {
 
 option_true() {
   [ "$(get_option "$1")" = "true" ]
+}
+
+get_docker_mode() {
+  mode="$(get_option docker_mode)"
+  if [ -z "$mode" ]; then
+    mode=rootless
+  fi
+  printf '%s\n' "$mode"
 }
 
 ensure_group() {
@@ -156,6 +168,34 @@ require_nested_docker_privileges() {
   exit 1
 }
 
+require_rootless_docker_prereqs() {
+  if [ -f /proc/sys/kernel/unprivileged_userns_clone ]; then
+    if [ "$(cat /proc/sys/kernel/unprivileged_userns_clone)" != "1" ]; then
+      echo "[docker-host] Rootless Docker requires kernel.unprivileged_userns_clone=1."
+      echo "[docker-host] If Home Assistant OS blocks user namespaces, use a normal remote Docker host instead."
+      exit 1
+    fi
+  fi
+
+  if [ -f /proc/sys/user/max_user_namespaces ]; then
+    if [ "$(cat /proc/sys/user/max_user_namespaces)" = "0" ]; then
+      echo "[docker-host] Rootless Docker requires user.max_user_namespaces greater than 0."
+      echo "[docker-host] If Home Assistant OS blocks user namespaces, use a normal remote Docker host instead."
+      exit 1
+    fi
+  fi
+
+  if ! command -v rootlesskit >/dev/null 2>&1; then
+    echo "[docker-host] rootlesskit is missing from this image."
+    exit 1
+  fi
+
+  if ! command -v su-exec >/dev/null 2>&1; then
+    echo "[docker-host] su-exec is missing from this image."
+    exit 1
+  fi
+}
+
 can_write_cgroup_root() {
   test_dir=/sys/fs/cgroup/coolify-write-test
   if mkdir -p "$test_dir" >/dev/null 2>&1; then
@@ -224,7 +264,13 @@ prepare_nested_cgroups() {
 print_connection_details() {
   echo "[docker-host] Internal SSH host: ${HOSTNAME:-camilo-coolify-docker-host}"
   echo "[docker-host] SSH users: root$(option_true allow_root_login || printf ' disabled'), coolify"
-  echo "[docker-host] Docker data root: ${DOCKER_DATA}"
+  echo "[docker-host] Docker mode: $(get_docker_mode)"
+  if [ "$(get_docker_mode)" = "rootless" ]; then
+    echo "[docker-host] Docker data root: ${ROOTLESS_DOCKER_DATA}"
+    echo "[docker-host] Docker rootless socket: ${ROOTLESS_RUNTIME}/docker.sock"
+  else
+    echo "[docker-host] Docker data root: ${DOCKER_DATA}"
+  fi
 
   if option_true generate_client_key; then
     echo "[docker-host] Generated client public key:"
@@ -240,27 +286,21 @@ print_connection_details() {
   fi
 }
 
-start_dockerd() {
-  mkdir -p "$DOCKER_DATA" /var/run
-  rm -f /var/run/docker.pid
+storage_driver_args() {
+  driver="$1"
+  mode="$2"
 
-  docker_log_level="$(get_option docker_log_level)"
-  docker_storage_driver="$(get_option docker_storage_driver)"
-  docker_cgroupns_mode="$(get_option docker_cgroupns_mode)"
-  docker_mtu="$(get_option docker_mtu)"
+  if [ "$driver" = "auto" ]; then
+    if [ "$mode" = "rootful" ]; then
+      printf '%s\n' "--storage-driver=vfs"
+    fi
+    return
+  fi
 
-  prepare_nested_cgroups
+  printf '%s\n' "--storage-driver=${driver}"
+}
 
-  echo "[docker-host] Starting nested Docker daemon"
-  docker-init -- dockerd \
-    --host=unix:///var/run/docker.sock \
-    --data-root="$DOCKER_DATA" \
-    --storage-driver="$docker_storage_driver" \
-    --default-cgroupns-mode="$docker_cgroupns_mode" \
-    --log-level="$docker_log_level" \
-    --mtu="$docker_mtu" &
-  DOCKERD_PID=$!
-
+wait_for_docker() {
   attempts=0
   while [ "$attempts" -lt 90 ]; do
     if ! kill -0 "$DOCKERD_PID" >/dev/null 2>&1; then
@@ -269,9 +309,10 @@ start_dockerd() {
       exit 1
     fi
 
-    if docker version >/dev/null 2>&1; then
-      chgrp docker /var/run/docker.sock || true
-      chmod 660 /var/run/docker.sock || true
+    docker_driver="$(docker info --format '{{.Driver}}' 2>/dev/null || true)"
+    if [ -n "$docker_driver" ]; then
+      chgrp docker /var/run/docker.sock >/dev/null 2>&1 || true
+      chmod 660 /var/run/docker.sock >/dev/null 2>&1 || true
       docker info --format '[docker-host] Docker ready: {{.ServerVersion}}, storage={{.Driver}}, cgroup={{.CgroupDriver}}'
       return
     fi
@@ -284,6 +325,75 @@ start_dockerd() {
   exit 1
 }
 
+start_rootful_dockerd() {
+  mkdir -p "$DOCKER_DATA" /var/run
+  rm -f /var/run/docker.pid
+
+  docker_log_level="$(get_option docker_log_level)"
+  docker_storage_driver="$(get_option docker_storage_driver)"
+  docker_cgroupns_mode="$(get_option docker_cgroupns_mode)"
+  docker_mtu="$(get_option docker_mtu)"
+  storage_args="$(storage_driver_args "$docker_storage_driver" rootful)"
+
+  prepare_nested_cgroups
+
+  echo "[docker-host] Starting rootful nested Docker daemon"
+  # shellcheck disable=SC2086
+  docker-init -- dockerd \
+    --host=unix:///var/run/docker.sock \
+    --data-root="$DOCKER_DATA" \
+    --default-cgroupns-mode="$docker_cgroupns_mode" \
+    --log-level="$docker_log_level" \
+    $storage_args \
+    --mtu="$docker_mtu" &
+  DOCKERD_PID=$!
+
+  wait_for_docker
+}
+
+start_rootless_dockerd() {
+  docker_log_level="$(get_option docker_log_level)"
+  docker_storage_driver="$(get_option docker_storage_driver)"
+  docker_mtu="$(get_option docker_mtu)"
+  storage_args="$(storage_driver_args "$docker_storage_driver" rootless)"
+
+  mkdir -p "$ROOTLESS_DOCKER_DATA" "$ROOTLESS_RUNTIME" /var/run
+  chown -R "${ROOTLESS_USER}:${ROOTLESS_USER}" "$ROOTLESS_DOCKER_DATA" "$ROOTLESS_RUNTIME" "$ROOTLESS_HOME"
+  chmod 700 "$ROOTLESS_RUNTIME"
+  rm -f "${ROOTLESS_RUNTIME}/docker.sock" "${ROOTLESS_RUNTIME}/docker.pid" /var/run/docker.sock
+  ln -s "${ROOTLESS_RUNTIME}/docker.sock" /var/run/docker.sock
+
+  export DOCKER_HOST="unix://${ROOTLESS_RUNTIME}/docker.sock"
+
+  echo "[docker-host] Starting rootless nested Docker daemon"
+  # shellcheck disable=SC2086
+  env \
+    XDG_RUNTIME_DIR="$ROOTLESS_RUNTIME" \
+    HOME="$ROOTLESS_HOME" \
+    DOCKERD_ROOTLESS_ROOTLESSKIT_MTU="$docker_mtu" \
+    su-exec "$ROOTLESS_USER" \
+    dockerd-entrypoint.sh \
+      dockerd \
+      --host="unix://${ROOTLESS_RUNTIME}/docker.sock" \
+      --data-root="$ROOTLESS_DOCKER_DATA" \
+      --log-level="$docker_log_level" \
+      --mtu="$docker_mtu" \
+      $storage_args &
+  DOCKERD_PID=$!
+
+  wait_for_docker
+}
+
+start_dockerd() {
+  if [ "$(get_docker_mode)" = "rootless" ]; then
+    require_rootless_docker_prereqs
+    start_rootless_dockerd
+  else
+    require_nested_docker_privileges
+    start_rootful_dockerd
+  fi
+}
+
 start_sshd() {
   echo "[docker-host] Starting SSH server"
   /usr/sbin/sshd -D -e &
@@ -293,6 +403,8 @@ start_sshd() {
 stop_services() {
   echo "[docker-host] Stopping services"
   kill "${SSHD_PID:-0}" "${DOCKERD_PID:-0}" >/dev/null 2>&1 || true
+  pkill -u "$ROOTLESS_USER" dockerd >/dev/null 2>&1 || true
+  pkill -u "$ROOTLESS_USER" rootlesskit >/dev/null 2>&1 || true
 }
 
 trap stop_services INT TERM
@@ -302,7 +414,6 @@ prepare_host_keys
 prepare_authorized_keys
 configure_password_auth
 write_sshd_config
-require_nested_docker_privileges
 print_connection_details
 start_dockerd
 start_sshd
